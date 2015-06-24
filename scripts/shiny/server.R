@@ -296,4 +296,14 @@ shinyServer(
     PC <- as.data.frame(eig$vectors)
     plot(PC$V1, PC$V2, pch=19, col=rgb(0,0,0,0.4),xlab="PC1", ylab="PC2", main="ngsCovar Results",asp=1)
   })
+  
+  output$pacBio <- renderText({
+    if(input$fastaChoice=='Yes'){
+      text <- "Glad to hear it!"
+    }
+    if(input$fastaChoice=='No'){
+      text <- "Perhaps your reads are too short. Have you considered PacBio?"
+    }
+    return(text)
+  })
 })
