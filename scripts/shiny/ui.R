@@ -1,7 +1,6 @@
 library(shiny)
 
 shinyUI(fluidPage(
-  
   # Application title
   titlePanel("angsd-wrapper graph"),
   tabsetPanel(
@@ -83,11 +82,33 @@ shinyUI(fluidPage(
       "Fst",
       sidebarLayout(
         sidebarPanel(
+          fileInput('userFst',
+                    label= 'Choose Fst File'
+          ),
+          fileInput('userIntersect',
+                    label= 'Choose Intersect File'
+          ),
+       
+          uiOutput('fstChroms'),
           
+          hr(),
+          checkboxInput("fstLowess","Fst Lowess", value=FALSE),
+          hr(),
+          
+          uiOutput('fstMin'),
+          uiOutput('fstMax'),
+          
+          checkboxInput("subset","Toggle subset data", value=FALSE),
+          
+          hr(),
+          fileInput('userAnnotations',
+                    label= 'Choose GFF File'
+          ),
+          checkboxInput("annotations","Toggle GFF annotations", value=FALSE)
           
         ),
         mainPanel(
-          
+          plotOutput("fstPlot")
         )
       )
     ),
@@ -118,6 +139,21 @@ shinyUI(fluidPage(
         ),
         mainPanel(
           plotOutput("admixPlot")
+          
+        )
+      )
+    ),
+    tabPanel(
+      "Fasta",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput("fastaChoice",
+                      label = "Are you satisfied with your fasta file?", 
+                      choices = c("Yes","No")
+          )
+        ),
+        mainPanel(
+          textOutput("pacBio")
           
         )
       )

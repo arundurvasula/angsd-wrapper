@@ -21,6 +21,7 @@ N_CORES=16
 DO_MAJORMINOR=1
 DO_MAF=1
 OVERRIDE=false
+SNP_PVAL=1e-3
 
 # load variables from supplied config file
 load_config $1
@@ -53,6 +54,7 @@ elif [[ ${REGIONS} == */* ]]; then
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -rf ${REGIONS}
 else
     >&2 echo "WRAPPER: $TAXON1 sfs starting"
@@ -73,6 +75,7 @@ else
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -r ${REGIONS}
 fi
 
@@ -98,6 +101,7 @@ elif [[ ${REGIONS} == */* ]]; then
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -rf ${REGIONS}
 else
     >&2  echo "WRAPPER: $TAXON2 sfs starting..."
@@ -118,6 +122,7 @@ else
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -r ${REGIONS}
 fi
 
@@ -145,6 +150,7 @@ if [[ ${REGIONS} == */* ]]; then
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -rf ${REGIONS}\
         -sites ${RESULTS_DIR}/intersect.${TAXON1}.${TAXON2}_intergenic.txt
 else
@@ -166,6 +172,7 @@ else
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -r ${REGIONS}\
         -sites ${RESULTS_DIR}/intersect.${TAXON1}.${TAXON2}_intergenic.txt
 fi
@@ -189,6 +196,7 @@ if [[ ${REGIONS} == */* ]]; then
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -rf ${REGIONS}\
         -sites ${RESULTS_DIR}/intersect.${TAXON1}.${TAXON2}_intergenic.txt
 else
@@ -210,6 +218,7 @@ else
         -ref ${REF_SEQ}\
         -GL ${GT_LIKELIHOOD}\
         -P ${N_CORES}\
+        -snp_pval ${SNP_PVAL}\
         -r ${REGIONS}\
         -sites ${RESULTS_DIR}/intersect.${TAXON1}.${TAXON2}_intergenic.txt
 fi
