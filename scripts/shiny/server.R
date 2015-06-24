@@ -5,6 +5,8 @@ library(Hmisc)
 library(ape)
 options(shiny.maxRequestSize = -1)
 thetas.headers <- c("(indexStart,indexStop)(firstPos_withData,lastPos_withData)(WinStart,WinStop)","Chr","WinCenter","tW","tP","tF","tH","tL","Tajima","fuf","fud","fayh","zeng","nSites")
+fst.headers <- c("A", "AB", "f", "FST", "Pvar")
+intersect.headers <- c("Chr","bp")
 
 not.loaded <- TRUE
 
@@ -32,6 +34,26 @@ shinyServer(
     
   })
   
+  dataInputFst = reactive({
+    data <- input$userFst
+    path <- as.character(data$datapath)
+    fst <- read.table(file=path, 
+                      sep="\t", 
+                      col.names=fst.headers
+                      )
+    return(fst)
+  })
+  
+  dataInputIntersect = reactive({
+    data <- input$userIntersect
+    path <- as.character(data$datapath)
+    intersect <- read.table(file=path, 
+                         sep="\t", 
+                         col.names=intersect.headers
+                         )
+    return(intersect)
+  })
+    
   dataInputAdmix = reactive({
     data <- input$userAdmix
     path <- as.character(data$datapath)
@@ -130,43 +152,80 @@ shinyServer(
     }
   })
   
-  output$selectionPlot <- renderPlot({
-    # error handling code to provide a default dataset to graph
-    thetas <- tryCatch({
-        dataInputThetas()
-      }, error = function(err) {
-        thetas <- read.table(file="BKN_Diversity.thetas.gz.pestPG", 
-                             sep="\t", 
-                             col.names=thetas.headers
-                             )
-      }
+  output$fstChroms = renderUI({
+    choices <- unique(intersect$Chr)
+    selectInput('userChrom', 'Chromosome to plot', choices)
+  })
+  
+  output$fstMin = renderUI({
+    min <- min(intersect$bp)
+    max <- max(intersect$bp)
+    numericInput("intersectLow", "Base Start Position", value=min, min = min, max=max-1)
+  })
+  
+  output$fstMax = renderUI({
+    max <- max(intersect$bp)
+    min <- min(intersect$bp)
+    numericInput("intersectHigh", "Base Start Position", value=min+10000, min=min+1, max=max)
+  })
+  
+  output$fstPlot <- renderPlot({
+     #error handling code to provide a default dataset to graph
+    fst <- tryCatch({
+      dataInputFst()
+    }, error = function(err) {
+      fst <- read.table(file="allo.indica.fst", 
+                           sep="\t", 
+                           col.names=fst.headers)
+    }
     )
+    intersect <- tryCatch({
+      dataInputIntersect()
+    }, error = function(err) {
+      intersect <- read.table(file="intersect.allo.indica_intergenic.txt", 
+                           sep="\t", 
+                           col.names=intersect.headers)
+    }
+    )
+    
+    fst.intersect <- cbind(intersect,fst)
+    fst.intersect <- subset(fst.intersect, Chr==input$userChrom)
+    fst.intersect <- subset(fst.intersect, FST>=0 & FST<=1)
+    
+    if(input$annotations){
+      validate(need(input$userAnnotations, 'Need GFF file before clicking checkbox!'))
+      gff <- gffInput()
+      gff.gene <- subset(gff, type="gene")
+      gff.df <- data.frame(gff.gene,annotation(gff))
+      gff.df.gene <- subset(gff.df, type=="gene")
+    }
     
     if(input$subset) {
-      thetas.plot <- subset(thetas, WinCenter > input$WinCenterLow & WinCenter < input$WinCenterHigh)
+      fst.plot <- subset(fst.intersect, bp >= input$intersectLow & bp <= input$intersectHigh)
     }
     else {
-      thetas.plot <- thetas
+      fst.plot <- fst.intersect
     }
-    
-    # remove nsites=0
-    thetas.plot <- subset(thetas.plot, nSites != 0)
-    
-    data <- switch(input$selectionChoice,
-                   "Tajima's D" = thetas.plot$Tajima,
-                   "Fu and Li's F" = thetas.plot$fuf,
-                   "Fu and Li's D" = thetas.plot$fud,
-                   "Fay and Wu's H" = thetas.plot$fayh,
-                   "Zeng's E" = thetas.plot$zeng
-    )
-    
-    plot(thetas.plot$WinCenter, 
-         data, t="p", pch=19,col=rgb(0,0,0,0.5), 
-         xlab="Position (bp)", 
-         ylab=input$selectionChoice, 
-         main=paste("Neutrality test statistics along chromosome", thetas$Chr[1])
-         )
-    if(input$selectionLowess){lines(lowess(thetas.plot$WinCenter,data, f=0.1), col="red")}
+
+    if(input$annotations) {
+      plot(fst.plot$bp, 
+           fst.plot$FST, t="p", pch=19,col=rgb(0,0,0,0.5), 
+           xlab="Position (bp)", 
+           ylab="Fst", 
+           main=paste("Fst along chromosome")
+      )
+      rug(rect(gff.df.gene$X1, -1e2, gff.df.gene$X2, 0, col=rgb(0.18,0.55,0.8,0.75), border=NA))
+      if(input$fstLowess){lines(lowess(fst.plot$bp,fst.plot$FST, f=0.1), col="red")}
+    }
+    else {
+      plot(fst.plot$bp, 
+           fst.plot$FST, t="p", pch=19,col=rgb(0,0,0,0.5), 
+           xlab="Position (bp)", 
+           ylab=paste("Fst"), 
+           main=paste("Fst along chromosome", fst.plot$Chr[1])
+      )
+      if(input$fstLowess){lines(lowess(fst.plot$bp,fst.plot$FST, f=0.1), col="red")}
+    }
   })
   
   output$SFSPlot <- renderPlot({
